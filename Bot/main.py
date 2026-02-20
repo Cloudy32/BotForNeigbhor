@@ -3,7 +3,7 @@ from handlers import  router
 import asyncio
 import os
 from dotenv import load_dotenv, find_dotenv
-from DB.database import async_main
+from DB.models import async_main
 
 load_dotenv(find_dotenv())
 
