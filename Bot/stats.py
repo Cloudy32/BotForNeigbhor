@@ -4,6 +4,7 @@ class Reg(StatesGroup):
     meal = State()
     age = State()
     name = State()
+    city = State()
     phone = State()
     description = State()
     photo = State()

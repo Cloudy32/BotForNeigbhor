@@ -19,6 +19,7 @@ class User(Base):
     meal: Mapped[str] = mapped_column(String(10))
     age: Mapped[int] = mapped_column(String(4))
     name: Mapped[str] = mapped_column(String(15))
+    city: Mapped[str] = mapped_column(String(20))
     phoneNumber: Mapped[str] = mapped_column(String(10))
     description: Mapped[str] = mapped_column(String(150))
     photo: Mapped[str] = mapped_column()
