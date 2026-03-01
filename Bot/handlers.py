@@ -28,37 +28,43 @@ async def cmd_start (message: Message):
 @router.callback_query(F.data == 'registration')
 async def registration(callback: CallbackQuery, state: FSMContext):
     await callback.answer('')
-    await callback.message.answer('Для начала выбери свой пол (Мужской/Женский)')
+    await callback.message.answer('Для начала выбери свой пол (Мужской/Женский)', reply_markup=kb.get_gender)
     await state.set_state(Reg.meal)
 
 @router.message(Reg.meal)
 async def meal(message: Message, state: FSMContext):
-    await state.update_data(meal=message.text)
-    await message.answer('Введите ваш возраст!')
-    await state.set_state(Reg.age)
+    if message.text == 'Мужской' or message.text == 'Женский':
+        await state.update_data(meal=message.text)
+        await message.answer('Введите ваш возраст! (цифрами)', reply_markup=ReplyKeyboardRemove())
+        await state.set_state(Reg.age)
+    else:
+        await message.answer('Выбери пол из двух возможных вариантов')
 
 @router.message(Reg.age)
 async def age(message: Message, state: FSMContext):
-    await state.update_data(age=message.text)
-    await message.answer('Введите ваше Имя!')
-    await state.set_state(Reg.name)
+    if message.text.isdigit():
+        await state.update_data(age=int(message.text))
+        await message.answer('Введите ваше Имя!')
+        await state.set_state(Reg.name)
+    else:
+        await message.answer('Пожалуйста введите возраст цифрами!')
 
 @router.message(Reg.name)
 async def name(message: Message, state: FSMContext):
-    await state.update_data(name=message.text)
+    await state.update_data(name=message.text.capitalize())
     await message.answer('Напишите ваш город!')
     await state.set_state(Reg.city)
 
 @router.message(Reg.city)
 async def name(message: Message, state: FSMContext):
-    await state.update_data(city=message.text)
+    await state.update_data(city=message.text.capitalize())
     await message.answer('Поделитесь номером телефона по кнопке ниже!',reply_markup=kb.get_number)
     await state.set_state(Reg.phone)
 
 @router.message(Reg.phone, F.contact)
 async def phone(message: Message, state: FSMContext):
     await state.update_data(phone=message.contact.phone_number)
-    await message.answer('Напишите краткое описание о себе(не больше 150 символов)',
+    await message.answer('Напишите краткое описание о себе(не больше 250 символов)',
                          reply_markup=ReplyKeyboardRemove())
     await state.set_state(Reg.description)
 
@@ -68,9 +74,21 @@ async def phone(message: Message):
 
 @router.message(Reg.description)
 async def description(message: Message, state: FSMContext):
-    await state.update_data(description=message.text)
-    await message.answer('Последний шаг, отправьте свое фото')
-    await state.set_state(Reg.photo)
+    if len(message.text) <= 250:
+        await state.update_data(description=message.text)
+        await message.answer('выберите пол соседа(Мужской, Женский, Неважно)', reply_markup=kb.gender_for_match)
+        await state.set_state(Reg.desired_gender)
+    else:
+        await message.answer('Введите описание не более 250 символов')
+
+@router.message(Reg.desired_gender)
+async def desired_gender(message: Message, state: FSMContext):
+    if message.text == 'Мужской' or message.text == 'Женский' or message.text == 'Неважно':
+        await state.update_data(desired_gender=message.text)
+        await message.answer('Последний шаг, отправьте свое фото', reply_markup=ReplyKeyboardRemove())
+        await state.set_state(Reg.photo)
+    else:
+        await message.answer('Выберите вариант из трех предложенных')
 
 @router.message(Reg.photo, F.photo)
 async def photo(message: Message, state: FSMContext):
@@ -79,7 +97,7 @@ async def photo(message: Message, state: FSMContext):
     await message.answer_photo(photo=message.photo[-1].file_id,caption=f'Ваша анкета создана!\n\nИмя: {data["name"]}, '
                          f'возраст: {data["age"]}, пол: {data["meal"]}\n\n'
                          f'Город: {data["city"]}, номер телефона: {data["phone"]}\n\n'
-                         f'Описание: {data["description"]}')
+                         f'Предпочтительный пол: {data["desired_gender"]}\n\nОписание: {data["description"]}')
 
     data_set = User(
         tg_id = message.from_user.id,
@@ -89,6 +107,7 @@ async def photo(message: Message, state: FSMContext):
         city=data.get('city'),
         phoneNumber=data.get('phone'),
         description=data.get('description'),
+        desired_gender=data.get('desired_gender'),
         photo=data.get('photo')
     )
 

@@ -7,4 +7,5 @@ class Reg(StatesGroup):
     city = State()
     phone = State()
     description = State()
+    desired_gender = State()
     photo = State()
