@@ -21,8 +21,8 @@ async def cmd_start (message: Message):
 """Начало блока с меню регистрации!"""
 
 """Блок в доработке. Для завершения блока нужно:
-   1. Сделать проверки на честность
-   2. Добавить финальную клавиатуру
+   1. Сделать проверки на честность +
+   2. Добавить финальную клавиатуру +
    3. Сделать просмотр и редактирование анкеты"""
 
 @router.callback_query(F.data == 'registration')
@@ -97,7 +97,8 @@ async def photo(message: Message, state: FSMContext):
     await message.answer_photo(photo=message.photo[-1].file_id,caption=f'Ваша анкета создана!\n\nИмя: {data["name"]}, '
                          f'возраст: {data["age"]}, пол: {data["meal"]}\n\n'
                          f'Город: {data["city"]}, номер телефона: {data["phone"]}\n\n'
-                         f'Предпочтительный пол: {data["desired_gender"]}\n\nОписание: {data["description"]}')
+                         f'Предпочтительный пол: {data["desired_gender"]}\n\nОписание: {data["description"]}',
+                               reply_markup=kb.menu)
 
     data_set = User(
         tg_id = message.from_user.id,
@@ -119,6 +120,45 @@ async def photo(message: Message):
     await message.answer('Отправьте пожалуйста фотографию')
 
 """Конец блока с меню регистрации!"""
+
+"""Блок вспомогательных команд"""
+"""Команда вывода своей анкеты"""
+
+@router.message(Command('view_the_questionnaire'))
+async def view_the_questionnaire(message: Message):
+    data = await get_data(message.from_user.id)
+    photo_id = data.photo
+    await message.answer_photo(photo=photo_id,caption=f'Ваша анкета! \n\nИмя: {data.name}, '
+                         f'возраст: {data.age}, пол: {data.meal}\n\n'
+                         f'Город: {data.city}, номер телефона: {data.phoneNumber}\n\n'
+                         f'Предпочтительный пол: {data.desired_gender}\n\nОписание: {data.description}')
+
+"""Команда пересоздания анкеты"""
+
+@router.message(Command('create_the_questionnaire_again'))
+async def questionnaire_again(message: Message, state: FSMContext):
+    await deleting_user(message.from_user.id)
+    await message.answer('Для начала выбери свой пол (Мужской/Женский)', reply_markup=kb.get_gender)
+    await state.set_state(Reg.meal)
+
+@router.callback_query(F.data == 'edit_list')
+async def del_user(message: Message, state: FSMContext):
+    await deleting_user(message.from_user.id)
+    await message.answer('Для начала выбери свой пол (Мужской/Женский)', reply_markup=kb.get_gender)
+    await state.set_state(Reg.meal)
+
+
+"""Команда по удалению анкеты"""
+
+@router.message(Command('del_user'))
+async def del_user(message: Message):
+    await deleting_user(message.from_user.id)
+    await message.answer('Ваша анкета удалена')
+
+@router.callback_query(F.data == 'delet_list')
+async def del_user(message: Message):
+    await deleting_user(message.from_user.id)
+    await message.answer('Ваша анкета удалена')
 
 """Блок с кодом демонстрации других анкет!/Подбором анкет по метчу"""
 

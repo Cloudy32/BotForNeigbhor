@@ -1,12 +1,14 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 
+
 start_menu = InlineKeyboardMarkup(
     inline_keyboard=[[InlineKeyboardButton(text='Создать анкету', callback_data='registration')],
                      [InlineKeyboardButton(text='Админ', callback_data='administrator')]])
 
 menu = InlineKeyboardMarkup(
-    inline_keyboard=[[InlineKeyboardButton(text='Просмотреть анкету', callback_data='vive_list')],
-                     [InlineKeyboardButton(text='Редактировать анкету', callback_data='edit_list')]]
+    inline_keyboard=[[InlineKeyboardButton(text='Удалить анкету', callback_data='delet_list')],
+                    [InlineKeyboardButton(text='Редактировать анкету', callback_data='edit_list')],
+                     [InlineKeyboardButton(text='Смотреть анкеты', callback_data='vive_lists')]]
 )
 
 
