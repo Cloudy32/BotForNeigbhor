@@ -16,7 +16,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tg_id = mapped_column(BigInteger)
-    meal: Mapped[str] = mapped_column(String(10))
+    gender: Mapped[str] = mapped_column(String(10))
     age: Mapped[int] = mapped_column(Integer())
     name: Mapped[str] = mapped_column(String(15))
     city: Mapped[str] = mapped_column(String(30))

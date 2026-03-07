@@ -22,7 +22,7 @@ async def users(callback: CallbackQuery):
         photo = data.photo
         await callback.answer('')
         await callback.message.answer_photo(photo=photo, caption=f'Имя: {data.name}, '
-                                     f'возраст: {data.age}, пол: {data.meal}\n\n'
+                                     f'возраст: {data.age}, пол: {data.gender}\n\n'
                                      f'Город: {data.city}, номер телефона: {data.phoneNumber}\n\n'
                                      f'Предпочтительный пол: {data.desired_gender}\n\nОписание: {data.description}',
                                             reply_markup=like_dislike)
@@ -38,21 +38,17 @@ async def cmd_start (message: Message):
 
 """Начало блока с меню регистрации!"""
 
-"""Блок в доработке. Для завершения блока нужно:
-   1. Сделать проверки на честность +
-   2. Добавить финальную клавиатуру +
-   3. Сделать просмотр и редактирование анкеты + """
 
 @router.callback_query(F.data == 'registration')
 async def registration(callback: CallbackQuery, state: FSMContext):
     await callback.answer('')
     await callback.message.answer('Для начала выбери свой пол (Мужской/Женский)', reply_markup=kb.get_gender)
-    await state.set_state(Reg.meal)
+    await state.set_state(Reg.gender)
 
-@router.message(Reg.meal)
-async def meal(message: Message, state: FSMContext):
+@router.message(Reg.gender)
+async def gender(message: Message, state: FSMContext):
     if message.text == 'Мужской' or message.text == 'Женский':
-        await state.update_data(meal=message.text)
+        await state.update_data(gender=message.text)
         await message.answer('Введите ваш возраст! (цифрами)', reply_markup=ReplyKeyboardRemove())
         await state.set_state(Reg.age)
     else:
@@ -113,14 +109,14 @@ async def photo(message: Message, state: FSMContext):
     await state.update_data(photo=message.photo[-1].file_id)
     data = await state.get_data()
     await message.answer_photo(photo=message.photo[-1].file_id,caption=f'Ваша анкета создана!\n\nИмя: {data["name"]}, '
-                         f'возраст: {data["age"]}, пол: {data["meal"]}\n\n'
+                         f'возраст: {data["age"]}, пол: {data["gender"]}\n\n'
                          f'Город: {data["city"]}, номер телефона: {data["phone"]}\n\n'
                          f'Предпочтительный пол: {data["desired_gender"]}\n\nОписание: {data["description"]}',
                                reply_markup=kb.menu)
 
     data_set = User(
         tg_id = message.from_user.id,
-        meal = data.get('meal'),
+        gender = data.get('gender'),
         age=data.get('age'),
         name=data.get('name'),
         city=data.get('city'),
@@ -150,7 +146,7 @@ async def view_the_questionnaire(message: Message):
     else:
         photo_id = data.photo
         await message.answer_photo(photo=photo_id,caption=f'Ваша анкета! \n\nИмя: {data.name}, '
-                             f'возраст: {data.age}, пол: {data.meal}\n\n'
+                             f'возраст: {data.age}, пол: {data.gender}\n\n'
                              f'Город: {data.city}, номер телефона: {data.phoneNumber}\n\n'
                              f'Предпочтительный пол: {data.desired_gender}\n\nОписание: {data.description}')
 
@@ -161,14 +157,14 @@ async def view_the_questionnaire(message: Message):
 async def questionnaire_again(message: Message, state: FSMContext):
     await deleting_user(message.from_user.id)
     await message.answer('Для начала выбери свой пол (Мужской/Женский)', reply_markup=kb.get_gender)
-    await state.set_state(Reg.meal)
+    await state.set_state(Reg.gender)
 
 @router.callback_query(F.data == 'edit_list')
 async def questionnaire_again(callback: CallbackQuery ,state: FSMContext):
     await deleting_user(callback.from_user.id)
     await callback.answer('')
     await callback.message.answer('Для начала выбери свой пол (Мужской/Женский)', reply_markup=kb.get_gender)
-    await state.set_state(Reg.meal)
+    await state.set_state(Reg.gender)
 
 
 """Команда по удалению анкеты"""
