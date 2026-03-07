@@ -11,6 +11,10 @@ menu = InlineKeyboardMarkup(
                      [InlineKeyboardButton(text='Смотреть анкеты', callback_data='vive_lists')]]
 )
 
+like_dislike = InlineKeyboardMarkup(
+    inline_keyboard=[[InlineKeyboardButton(text='👍', callback_data='like'),
+                      InlineKeyboardButton(text='👎', callback_data='dislike')]])
+
 
 get_number = ReplyKeyboardMarkup(
     keyboard=[[KeyboardButton(text='Отправить номер', request_contact=True,)]], resize_keyboard=True
