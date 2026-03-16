@@ -27,6 +27,15 @@ async def get_data(tg_id: int):
         else:
             return None
 
+async def get_liked_user(liked_user_id: int):
+    async with async_session() as session:
+        query = await session.execute(select(User).where(User.tg_id == liked_user_id))
+
+        if query:
+            data = query.scalar_one_or_none()
+            return data
+        else:
+            return None
 
 async def deleting_user(tg_id: int) -> None:
     async with async_session() as session:
@@ -88,15 +97,14 @@ async def get_another_user(tg_id: int):
         desired_gender = current_user.desired_gender
         gender = current_user.gender
 
-        another_user = await other_user(tg_id=tg_id, city=city, desired_gender=desired_gender, gender=gender)
+        another_user = await other_user(
+            tg_id=tg_id,
+            city=city,
+            desired_gender=desired_gender,
+            gender=gender
+        )
 
         if not another_user:
             return None
         else:
             return another_user
-
-
-
-
-
-

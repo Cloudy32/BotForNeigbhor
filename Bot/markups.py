@@ -11,14 +11,10 @@ menu = InlineKeyboardMarkup(
                      [InlineKeyboardButton(text='Смотреть анкеты', callback_data='vive_lists')]]
 )
 
-like_dislike = InlineKeyboardMarkup(
-    inline_keyboard=[[InlineKeyboardButton(text='👍', callback_data='like'),
-                      InlineKeyboardButton(text='👎', callback_data='dislike')]])
-
-
-get_number = ReplyKeyboardMarkup(
-    keyboard=[[KeyboardButton(text='Отправить номер', request_contact=True,)]], resize_keyboard=True
-)
+def like_dislike_kb(user_id: int):
+    like_dislike = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='👍', callback_data=f'like_{user_id}'),
+                  InlineKeyboardButton(text='👎', callback_data='dislike')]])
+    return like_dislike
 
 get_gender = ReplyKeyboardMarkup(
     keyboard=[[KeyboardButton(text='Мужской')], [KeyboardButton(text='Женский')]], resize_keyboard=True

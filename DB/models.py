@@ -16,11 +16,11 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tg_id = mapped_column(BigInteger)
+    username: Mapped[str] = mapped_column(String(60))
     gender: Mapped[str] = mapped_column(String(10))
     age: Mapped[int] = mapped_column(Integer())
     name: Mapped[str] = mapped_column(String(15))
     city: Mapped[str] = mapped_column(String(30))
-    phoneNumber: Mapped[str] = mapped_column(String(15))
     description: Mapped[str] = mapped_column(String(250))
     desired_gender: Mapped[str] = mapped_column()
     photo: Mapped[str] = mapped_column()
@@ -28,5 +28,3 @@ class User(Base):
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-
-

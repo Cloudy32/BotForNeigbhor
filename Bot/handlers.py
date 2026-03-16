@@ -3,17 +3,19 @@ from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 
-from Bot.markups import like_dislike
 from DB.requests import *
 import Bot.markups as kb
 from stats import Reg
 
 router=Router() #Роутер для удаленного доступа в другой библиотеке
 
-
+data_tg_id = None
 
 async def users(callback: CallbackQuery):
+    keyboard = kb.like_dislike_kb(callback.from_user.id)
     data = await get_another_user(callback.from_user.id)
+
+    data_tg_id = data.tg_id
 
     if data is None:
         await callback.answer('')
@@ -22,10 +24,12 @@ async def users(callback: CallbackQuery):
         photo = data.photo
         await callback.answer('')
         await callback.message.answer_photo(photo=photo, caption=f'Имя: {data.name}, '
-                                     f'возраст: {data.age}, пол: {data.gender}\n\n'
-                                     f'Город: {data.city}, номер телефона: {data.phoneNumber}\n\n'
+                                     f'возраст: {data.age}\n\n пол: {data.gender}\n\n'
+                                     f'Город: {data.city}\n\n'
                                      f'Предпочтительный пол: {data.desired_gender}\n\nОписание: {data.description}',
-                                            reply_markup=like_dislike)
+                                            reply_markup=keyboard)
+
+    return data_tg_id
 
 """Консоль команды старт"""
 @router.message(CommandStart())
@@ -72,19 +76,8 @@ async def name(message: Message, state: FSMContext):
 @router.message(Reg.city)
 async def name(message: Message, state: FSMContext):
     await state.update_data(city=message.text.capitalize())
-    await message.answer('Поделитесь номером телефона по кнопке ниже!',reply_markup=kb.get_number)
-    await state.set_state(Reg.phone)
-
-@router.message(Reg.phone, F.contact)
-async def phone(message: Message, state: FSMContext):
-    await state.update_data(phone=message.contact.phone_number)
-    await message.answer('Напишите краткое описание о себе(не больше 250 символов)',
-                         reply_markup=ReplyKeyboardRemove())
+    await message.answer('Введите описание не более 250 символов')
     await state.set_state(Reg.description)
-
-@router.message(Reg.phone)
-async def phone(message: Message):
-    await message.answer('Отправьте контакт по кнопке ниже!!!!')
 
 @router.message(Reg.description)
 async def description(message: Message, state: FSMContext):
@@ -110,17 +103,17 @@ async def photo(message: Message, state: FSMContext):
     data = await state.get_data()
     await message.answer_photo(photo=message.photo[-1].file_id,caption=f'Ваша анкета создана!\n\nИмя: {data["name"]}, '
                          f'возраст: {data["age"]}, пол: {data["gender"]}\n\n'
-                         f'Город: {data["city"]}, номер телефона: {data["phone"]}\n\n'
+                         f'Город: {data["city"]}\n\n'
                          f'Предпочтительный пол: {data["desired_gender"]}\n\nОписание: {data["description"]}',
                                reply_markup=kb.menu)
 
     data_set = User(
         tg_id = message.from_user.id,
+        username = message.from_user.username,
         gender = data.get('gender'),
         age=data.get('age'),
         name=data.get('name'),
         city=data.get('city'),
-        phoneNumber=data.get('phone'),
         description=data.get('description'),
         desired_gender=data.get('desired_gender'),
         photo=data.get('photo')
@@ -147,7 +140,7 @@ async def view_the_questionnaire(message: Message):
         photo_id = data.photo
         await message.answer_photo(photo=photo_id,caption=f'Ваша анкета! \n\nИмя: {data.name}, '
                              f'возраст: {data.age}, пол: {data.gender}\n\n'
-                             f'Город: {data.city}, номер телефона: {data.phoneNumber}\n\n'
+                             f'Город: {data.city}\n\n'
                              f'Предпочтительный пол: {data.desired_gender}\n\nОписание: {data.description}')
 
 
@@ -191,9 +184,24 @@ async def viwe_lists(callback: CallbackQuery):
 async def next_user(callback: CallbackQuery):
     await users(callback)
 
-@router.callback_query(F.data == 'like') #Нуждается в доработке жесткой, я хз как это реализовать
+@router.callback_query(F.data.startswith('like_')) #Нуждается в доработке жесткой, я хз как это реализовать
 async def user_next(callback: CallbackQuery):
-    await users(callback)
+    await callback.answer('')
+    await callback.message.answer("Пользователю отправлено ваше предложение о совместном проживании!")
+    data = await users(callback)
+    liked_user_id2 = int(data)
+    if data:
+        chat_id = liked_user_id2
+        second_user_data = await get_data(callback.from_user.id)
+        photo = second_user_data.photo
+        await callback.bot.send_photo(chat_id=chat_id, photo=photo, caption=f'Анкета человека которому вы понравились \n\n'
+                             f'Имя: {second_user_data.name}\n\n' f'возраст: {second_user_data.age}, '
+                             f'пол: {second_user_data.gender}\n\n'
+                             f'Город: {second_user_data.city}\n\n' 
+                             f'Предпочтительный пол: {second_user_data.desired_gender}\n\n'
+                             f'Описание: {second_user_data.description}\n\n'
+                             f'id для связи:@{second_user_data.username}')
+
 
 
 @router.callback_query(F.data == 'administrator')
