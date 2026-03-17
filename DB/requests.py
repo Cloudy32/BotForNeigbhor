@@ -1,13 +1,11 @@
 """Файл запросов к БД"""
-from pydantic import with_config
 
 import random
 
-
 from DB.models import User, async_session
-from sqlalchemy import select, insert, and_, or_
+from sqlalchemy import select, and_, or_
 
-async def set_user(tg_id: int, data_set) -> None:
+async def set_user(tg_id: int, data_set) -> None: #функция для добавления пользователя в БД
     async with async_session() as session:
         user = await session.scalar(select(User).where(User.tg_id == tg_id))
 
@@ -15,9 +13,7 @@ async def set_user(tg_id: int, data_set) -> None:
             session.add(data_set)
             await session.commit()
 
-
-
-async def get_data(tg_id: int):
+async def get_data(tg_id: int): #Функция для вывода информации пользователю о себе
     async with async_session() as session:
         result = await session.execute(select(User).where(User.tg_id == tg_id))
 
@@ -27,17 +23,7 @@ async def get_data(tg_id: int):
         else:
             return None
 
-async def get_liked_user(liked_user_id: int):
-    async with async_session() as session:
-        query = await session.execute(select(User).where(User.tg_id == liked_user_id))
-
-        if query:
-            data = query.scalar_one_or_none()
-            return data
-        else:
-            return None
-
-async def deleting_user(tg_id: int) -> None:
+async def deleting_user(tg_id: int) -> None: #Функция по удалению анкеты из БД
     async with async_session() as session:
         user = await session.scalar(select(User).where(User.tg_id == tg_id))
 
@@ -45,8 +31,7 @@ async def deleting_user(tg_id: int) -> None:
             await session.delete(user)
             await session.commit()
 
-
-async def other_user(tg_id: int, city: str, desired_gender: str, gender: str):
+async def other_user(tg_id: int, city: str, desired_gender: str, gender: str): #Запрос в БД для сбора нужной информации
     async with async_session() as session:
         query = select(User).where(
             and_(
@@ -79,7 +64,6 @@ async def other_user(tg_id: int, city: str, desired_gender: str, gender: str):
                 )
             )
 
-
         result = await session.execute(query)
         users = result.scalars().all()
 
@@ -89,7 +73,7 @@ async def other_user(tg_id: int, city: str, desired_gender: str, gender: str):
             return random.choice(users)
 
 
-async def get_another_user(tg_id: int):
+async def get_another_user(tg_id: int): #Запрос в бд для получения другого юзера
     async with async_session() as session:
         current_user = await session.scalar(select(User).where(User.tg_id == tg_id))
 
@@ -103,6 +87,7 @@ async def get_another_user(tg_id: int):
             desired_gender=desired_gender,
             gender=gender
         )
+
 
         if not another_user:
             return None

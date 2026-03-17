@@ -1,6 +1,5 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 
-
 start_menu = InlineKeyboardMarkup(
     inline_keyboard=[[InlineKeyboardButton(text='Создать анкету', callback_data='registration')],
                      [InlineKeyboardButton(text='Админ', callback_data='administrator')]])
@@ -11,10 +10,9 @@ menu = InlineKeyboardMarkup(
                      [InlineKeyboardButton(text='Смотреть анкеты', callback_data='vive_lists')]]
 )
 
-def like_dislike_kb(user_id: int):
-    like_dislike = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='👍', callback_data=f'like_{user_id}'),
-                  InlineKeyboardButton(text='👎', callback_data='dislike')]])
-    return like_dislike
+like_dislike = InlineKeyboardMarkup(
+    inline_keyboard=[[InlineKeyboardButton(text='👍', callback_data='like'),
+                InlineKeyboardButton(text='👎', callback_data='dislike')]])
 
 get_gender = ReplyKeyboardMarkup(
     keyboard=[[KeyboardButton(text='Мужской')], [KeyboardButton(text='Женский')]], resize_keyboard=True

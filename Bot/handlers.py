@@ -1,4 +1,4 @@
-from aiogram import types, F, Router
+from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
@@ -9,10 +9,7 @@ from stats import Reg
 
 router=Router() #Роутер для удаленного доступа в другой библиотеке
 
-data_tg_id = None
-
 async def users(callback: CallbackQuery):
-    keyboard = kb.like_dislike_kb(callback.from_user.id)
     data = await get_another_user(callback.from_user.id)
 
     data_tg_id = data.tg_id
@@ -24,10 +21,10 @@ async def users(callback: CallbackQuery):
         photo = data.photo
         await callback.answer('')
         await callback.message.answer_photo(photo=photo, caption=f'Имя: {data.name}, '
-                                     f'возраст: {data.age}\n\n пол: {data.gender}\n\n'
+                                     f'возраст: {data.age}, пол: {data.gender}\n\n'
                                      f'Город: {data.city}\n\n'
                                      f'Предпочтительный пол: {data.desired_gender}\n\nОписание: {data.description}',
-                                            reply_markup=keyboard)
+                                            reply_markup=kb.like_dislike)
 
     return data_tg_id
 
@@ -41,13 +38,6 @@ async def cmd_start (message: Message):
                           " Если хотите связаться с администрацией нажмите (Админ).", reply_markup=kb.start_menu)
 
 """Начало блока с меню регистрации!"""
-
-
-@router.callback_query(F.data == 'registration')
-async def registration(callback: CallbackQuery, state: FSMContext):
-    await callback.answer('')
-    await callback.message.answer('Для начала выбери свой пол (Мужской/Женский)', reply_markup=kb.get_gender)
-    await state.set_state(Reg.gender)
 
 @router.message(Reg.gender)
 async def gender(message: Message, state: FSMContext):
@@ -125,12 +115,10 @@ async def photo(message: Message, state: FSMContext):
 @router.message(Reg.photo)
 async def photo(message: Message):
     await message.answer('Отправьте пожалуйста фотографию')
-
 """Конец блока с меню регистрации!"""
 
 """Блок вспомогательных команд"""
 """Команда вывода своей анкеты"""
-
 @router.message(Command('view_the_questionnaire'))
 async def view_the_questionnaire(message: Message):
     data = await get_data(message.from_user.id)
@@ -143,68 +131,15 @@ async def view_the_questionnaire(message: Message):
                              f'Город: {data.city}\n\n'
                              f'Предпочтительный пол: {data.desired_gender}\n\nОписание: {data.description}')
 
-
-"""Команда пересоздания анкеты"""
-
+"""команда пересоздания анкеты"""
 @router.message(Command('create_the_questionnaire_again'))
 async def questionnaire_again(message: Message, state: FSMContext):
     await deleting_user(message.from_user.id)
     await message.answer('Для начала выбери свой пол (Мужской/Женский)', reply_markup=kb.get_gender)
     await state.set_state(Reg.gender)
 
-@router.callback_query(F.data == 'edit_list')
-async def questionnaire_again(callback: CallbackQuery ,state: FSMContext):
-    await deleting_user(callback.from_user.id)
-    await callback.answer('')
-    await callback.message.answer('Для начала выбери свой пол (Мужской/Женский)', reply_markup=kb.get_gender)
-    await state.set_state(Reg.gender)
-
-
 """Команда по удалению анкеты"""
-
 @router.message(Command('del_user'))
 async def del_user(message: Message):
     await deleting_user(message.from_user.id)
     await message.answer('Ваша анкета удалена')
-
-@router.callback_query(F.data == 'delet_list')
-async def del_user(callback: CallbackQuery):
-    await deleting_user(callback.from_user.id)
-    await callback.answer('')
-    await callback.message.answer('Ваша анкета удалена')
-
-"""Блок с кодом демонстрации других анкет!/Подбором анкет по метчу"""
-
-@router.callback_query(F.data == 'vive_lists')
-async def viwe_lists(callback: CallbackQuery):
-    await users(callback)
-
-
-@router.callback_query(F.data == 'dislike')
-async def next_user(callback: CallbackQuery):
-    await users(callback)
-
-@router.callback_query(F.data.startswith('like_')) #Нуждается в доработке жесткой, я хз как это реализовать
-async def user_next(callback: CallbackQuery):
-    await callback.answer('')
-    await callback.message.answer("Пользователю отправлено ваше предложение о совместном проживании!")
-    data = await users(callback)
-    liked_user_id2 = int(data)
-    if data:
-        chat_id = liked_user_id2
-        second_user_data = await get_data(callback.from_user.id)
-        photo = second_user_data.photo
-        await callback.bot.send_photo(chat_id=chat_id, photo=photo, caption=f'Анкета человека которому вы понравились \n\n'
-                             f'Имя: {second_user_data.name}\n\n' f'возраст: {second_user_data.age}, '
-                             f'пол: {second_user_data.gender}\n\n'
-                             f'Город: {second_user_data.city}\n\n' 
-                             f'Предпочтительный пол: {second_user_data.desired_gender}\n\n'
-                             f'Описание: {second_user_data.description}\n\n'
-                             f'id для связи:@{second_user_data.username}')
-
-
-
-@router.callback_query(F.data == 'administrator')
-async def call_admin(callback: CallbackQuery):
-    await callback.answer('')
-    await callback.message.answer('Контакты администратора: @Dayyaog')

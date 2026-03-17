@@ -1,6 +1,7 @@
 from aiogram import Bot, Dispatcher
 
-from handlers import  router
+from handlers import router
+from callback_handlers import callback_router
 
 import asyncio
 import os
@@ -10,14 +11,12 @@ from DB.models import async_main
 
 load_dotenv(find_dotenv())
 
-
-
 bot=Bot(os.getenv('TOKEN'))
 dp = Dispatcher()
 
 async def main():
     await async_main()
-    dp.include_router(router)
+    dp.include_routers(router, callback_router)
     await dp.start_polling(bot)
 
 
